@@ -1,0 +1,328 @@
+﻿Dubbo是一个分布式服务框架，致力于提供高性能和透明化的RPC远程服务调用方案，以及SOA服务治理方案
+Dubbo采用全Spring配置方式，透明化接入应用，对应用没有任何API侵入，只需用Spring加载Dubbo的配置即可，
+Dubbo基于Spring的Schema扩展进行加载
+
+
+SOA是Service-Oriented Architecture的首字母简称，它是一种支持面向服务的架构样式。
+从服务、基于服务开发和服务的结果来看，面向服务是一种思考方式。
+ 
+FastDFS(Distributed file system分布式文件系统 )主要包括：跟踪器tracker（在访问上起到负载均衡的作用，
+信息保存在内存中，性能非常高）和存储节点storage（完成文件管理的所有功能，文件存储，同步，存取接口等）
+ 
+ 
+轮询：概括来说是服务端定时主动的去与要监控状态的客户端（或者叫其他系统）通信，询问当前的某种状态，客户端返回状态信息，
+ 		  客户端没有返回或返回错误、失效信息、则认为客户端已经宕机，然后服务端自己内部把这个客户端的状态保存下来（宕机或者其他），
+ 		  如果客户端正常，那么返回正常状态，如果客户端宕机或者返回的是定义的失效状态那么当前的客户端状态是能够及时的监控到的，
+ 		  如 ，把其状态重新更新。
+心跳：最终得到的结果是与轮询一样的但是实现的方式有差别，心跳不是服务端主动去发信息检测客户端状态，而是在服务端保存下来所有客户端的状态信息，
+		  然后等待客户端定时来访问服务端，更新自己的当前状态，如果客户端超过指定的时间没有来更新状态，则认为客户端已经宕机或者其状态异常。
+心跳机制与轮询的比较：
+		  在我们的应用中，采用的是心跳，这样一是避免服务端的压力，二是灵活好控制,我们的外网服务端（服务端）不知道内网服务端（客户端）的地址，
+		  有虽然有保存客户端的socket会话，但是客户端宕机会话就失效了。所以只能等着他主动来报告状态。
+心跳时间：
+		   首先，客户端（内网服务端）启动后，带着自己的标识符与服务端建立socket连接，服务端缓存下来对应信息，
+		   然后在通过socket流，定时发送当前信息消息到服务端（外网服务器端）某个接口，服务端收到后更新当前的客户端的状态，
+		   比如（会话地址，标识符，网络的活跃状态，连接时间，心跳时间），本次来更新的时间就是心跳时间，然后服务端还有一个定时器，
+		   定时检查所有缓存的客户端会话集合，将其中心跳时间与当前时间进行对比，如果超过指定的时间还没有来更新则认为该客户端的网络出现异常或者宕机，
+		   然后更新该客户端的网络状态。
+		   
+悲观锁和乐观锁：数据的锁定分为两种方法，第一种叫做悲观锁，第二种叫做乐观锁
+		   什么叫悲观锁呢，就是对数据的冲突采取一种悲观的态度，也就是说假设数据肯定会冲突，所以在数据开始读取的时候就把数据锁定住。
+		   而乐观锁就是认为数据一般情况下不会造成冲突，所以在数据进行提交更新的时候，才会正式对数据的冲突与否进行检测，如果发现冲突了，则让用户返回错误的信息，让用户决定如何去做。
+注：对于悲观锁是针对并发的可能性比较大，而一般在我们的应用中用乐观锁足以。
+SQL SERVER：
+		   悲观锁，数据的锁定通常采用页级锁的方式，也就是说对一张表内的数据是一种串行化的更新插入机制，在任何时间同一张表只会插1条数据，别的想插入的数据要等到这一条数据插完以后才能依次插入
+		   带来的后果就是性能的降低，在多用户并发访问的时候，当对一张表进行频繁操作时，会发现响应效率很低，数据库经常处于一种假死状态
+Oracle：
+		   悲观锁，用的是行级锁，只是对想锁定的数据才进行锁定，其余的数据不相干，所以在对Oracle表中并发插数据的时候，基本上不会有任何影响。
+		   Oracle的悲观锁需要利用一条现有的连接，分成两种方式，从SQL语句的区别来看，就是一种是for update，一种是for update nowait的形式。
+           当执行for update，数据库就被锁定，第二次采用for update nowait就会迅速返回ORA-00054错误，内容是资源正忙, 但指定以 NOWAIT 方式获取资源。
+           所以在程序中我们可以采用nowait方式迅速判断当前数据是否被锁定中，如果锁定中的话，就要采取相应的业务措施进行处理。
+           
+
+多线程  list  线程安全  Nginx   zookeeper
+
+nginx 的 upstream目前支持 5 种方式的分配 
+1)、轮询（默认） 
+      每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。 
+2)、weight 
+      指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。 
+3)、ip_hash 
+      每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题。  
+4)、fair（第三方） 
+      按后端服务器的响应时间来分配请求，响应时间短的优先分配。  
+5)、url_hash（第三方）
+
+
+kafka开源的消息系统，用来消息传递和分发，能支持大数据量
+
+1.ZooKeeper是什么？
+					ZooKeeper是一个分布式的，开放源码的分布式应用程序协调服务，是Google的Chubby一个开源的实现，它是集群的管理者，监视着集群中各个节点的状态根据节点提交的反馈进行下一步合理操作。
+				    最终，将简单易用的接口和性能高效、功能稳定的系统提供给用户
+				    
+Kafka中ZooKeeper的用途：
+				正如ZooKeeper用于分布式系统的协调和促进，Kafka使用ZooKeeper也是基于相同的原因。ZooKeeper用于管理、协调Kafka代理。
+				每个Kafka代理都通过ZooKeeper协调其它Kafka代理。当Kafka系统中新增了代理或者某个代理故障失效时，ZooKeeper服务将通知生产者和消费者。生产者和消费者据此开始与其它代理协调工作。Kafka整体系统架构所示。
+				
+				
+			
+			
+			
+touch 新建文件
+cat 是一次性显示整个文件的内容（适合小文件）
+more 按页查看文件  空格下一页  b上一页
+less 支持分页查找  more比cat强大，提供分页显示的功能，less比more更强大,提供翻页，跳转，查找等命令
+tail 命令可用于查看文件的内容，有一个常用的参数 -f 常用于查阅正在改变的日志文件 tail -f catlina.out
+rm 删除文件 
+rmdir删除文件夹
+mv 重命名或移动
+cp 复制
+tar -zcvf hello.tar.gz hello.sh 压缩
+tar -xzvf hello.tar.gz hello.sh 解压缩
+
+
+
+IO和 NIO
+	io 面向流  nio面向缓冲
+	io 阻塞的 nio 非阻塞的
+
+i+1<i（最大值的时候，i+1为负数）
+ArrayList(20)扩充0次
+
+•Vector 线程安全：
+•HashTable 线程安全：
+•StringBuffer 线程安全：
+
+
+public class TestB extends TestA{
+	public TestB(){  System.out.println("Hello B"); }
+	{   System.out.println("test B"); }
+	static{
+		System.out.println("static B");
+	}
+	public static void main(String[] args) {
+		new TestB();
+	}
+}
+先是父类静态，子类静态  父类代码块，父类构造，子类代码块，子类构造
+
+线程池 ThreadPoolExcutor
+	ExcutorService excutor=new ThreadPoolExcutor(2, 3, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1));
+	
+事务属性(jdbc和hibernate)
+	传播行为、隔离规则、是否只读、回滚规则、事务超时
+	传播行为：七种 默认取值为REQUIRED，即使用调用方法的事务
+			REQUIRED        表示当前方法必须运行在事务中。如果当前事务存在，方法将会在该事务中运行。否则，会启动一个新的事务
+			SUPPORTS       表示当前方法不需要事务上下文，但是如果存在当前事务的话，那么该方法会在这个事务中运行
+			NEVER              表示当前方法不应该运行在事务上下文中。如果当前正有一个事务在运行，则会抛出异常
+			MANDATORY   表示该方法必须在事务中运行，如果当前事务不存在，则会抛出一个异常
+	隔离规则  隔离级别定义了一个事务可能受其他并发事务影响的程度。最常用的取值为READ_COMMITTED
+			DEFAULT                       使用后端数据库默认的隔离级别
+			READ_UNCOMMIT		最低的隔离级别，允许读取尚未提交的数据变更，可能会导致脏读、幻读或不可重复读
+			READ_COMMIT			允许读取并发事务已经提交的数据，可以阻止脏读，但是幻读或不可重复读仍有可能发生
+			REPEATABLE_READ		对同一字段的多次读取结果都是一致的，除非数据是被本身事务自己所修改，可以阻止脏读和不可重复读，但幻读仍有可能发生
+			SERIALIZABLE 				最高的隔离级别，完全服从ACID的隔离级别，确保阻止脏读、不可重复读以及幻读，也是最慢的事务隔离级别，因为它通常是通过完全锁定事务相关的数据库表来实现的
+	 回滚规则	 默认情况下 Spring 的声明式事务对所有的运行时异常进行回滚，也可以通过对应的属性进行设置。通常情况下，默认值即可。
+	 是否只读   指定事务是否为只读。 表示这个事务只读取数据但不更新数据，这样可以帮助数据库引擎优化事务。
+	 事务超时   指定强制回滚之前事务可以占用的时间。
+	 
+#{ }和${ }的区别是什么？
+	#{ }是参数占位符，属于静态文本替换
+	${ }是变量占位符，Mybatis会将sql中的#{}替换为?号，在sql执行前会使用PreparedStatement的参数设置方法，按序给sql的?号占位符设置参数值
+
+Xml映射文件中，除了常见的select|insert|updae|delete标签之外，还有哪些标签？
+	还有很多其他的标签，<resultMap>、<parameterMap>、<sql>、<include>、<selectKey>，加上动态sql的9个标签，trim|where|set|foreach|if|choose|when|otherwise|bind等，其中<sql>为sql片段标签，通过<include>标签引入sql片段，<selectKey>为不支持自增的主键生成策略标签。
+    被<![CDATA[]]>这个标记所包含的内容将表示为纯文本，比如<![CDATA[<]]>表示文本内容“<”。 
+    
+Mybatis是如何进行分页的？分页插件的原理是什么？    
+       1)、Mybatis使用RowBounds对象进行分页，它是针对ResultSet结果集执行的内存分页，而非物理分页 
+    可以在sql内直接书写带有物理分页的参数来完成物理分页功能，也可以使用分页插件来完成物理分页；
+       2)、分页插件的基本原理是使用Mybatis提供的插件接口，实现自定义插件，在插件的拦截方法内拦截待执行的sql
+    然后重写sql，根据dialect方言，添加对应的物理分页语句和物理分页参数。
+
+Dao接口的工作原理是什么？
+	       Dao接口的工作原理是JDK动态代理，Mybatis运行时会使用JDK动态代理为Dao接口生成代理proxy对象，
+	代理对象proxy会拦截接口方法，转而执行MappedStatement所代表的sql，然后将sql执行结果返回。
+	
+	
+AJAX原理
+	XMLHttpRequest 对象 (异步的与服务器交换数据)
+	
+多线程死锁解决，线程同步
+	按顺序加锁，加锁时间；
+	分别是synchronized,wait与notify 
+
+vue.js前端框架
+
+前台解析json
+	var dataObj=eval("("+data+")");//转换为json对象
+	如果jquery异步请求将type（一般为这个配置属性）设为“json”，或者利用$.getJSON()方法获得服务器返回，那么就不需要eval（）方法了 
+	alert("name:"+item.name+",value:"+item.value); 
+
+
+redis持久化
+	一种是RDB持久化（原理是将Reids在内存中的数据库记录定时dump到磁盘上的RDB持久化）;
+	一种是AOF（append only file）持久化（原理是将Reids的操作日志以追加的方式写入文件）;
+	RDB持久化配置
+		Redis会将数据集的快照dump到dump.rdb文件中。此外，我们也可以通过配置文件来修改Redis服务器dump快照的频率，在打开6379.conf文件之后，我们搜索save，可以看到下面的配置信息：
+		save 900 1              #在900秒(15分钟)之后，如果至少有1个key发生变化，则dump内存快照。
+		save 300 10            #在300秒(5分钟)之后，如果至少有10个key发生变化，则dump内存快照。
+		save 60 10000        #在60秒(1分钟)之后，如果至少有10000个key发生变化，则dump内存快照。
+	AOF持久化配置
+		在Redis的配置文件中存在三种同步方式，它们分别是：
+		appendfsync always     #每次有数据修改发生时都会写入AOF文件。
+		appendfsync everysec  #每秒钟同步一次，该策略为AOF的缺省策略。
+		appendfsync no          #从不同步。高效但是数据不会被持久化。
+
+redis集群
+	集群至少需要6个节点（3主3从模式） 首先需要安装ruby环境
+
+mysql kk`......
+./mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data
+mysql -uroot -p  123456
+
+
+/usr/local/nginx/sbin   nginx -s reload
+http://172.22.138.4:809xiao/
+
+
+虚拟机 登录
+账号 ：root 
+密码 ：root
+虚拟机网络配置为 桥接
+systemctl status iptables
+service network restart
+先关闭防火墙
+ip addr看下此时的ip是多少
+
+docker 
+systemctl start docker
+docker run hello-world
+docker images//查看镜像
+docker ps//查看容器
+docker run -i -t python:3.5 /bin/bash //进入python
+安装python 现在linux建立xxx.py文件  然后挂载到容器
+
+systemctl restart docker;//报错的时候重启docker.
+ iptables: No chain/target/match by that name.
+
+
+shiro权限控制
+
+union和union all的区别是，union会自动压缩多个结果集合中的重复结果，而union all则将所有的结果全部显示出来，不管是不是重复。
+
+maven update   ->run clean/install  -project clean 
+
+mysql精度
+cast(s.price as decimal(10,2))  AS 'value'
+CAST函数语法规则是：Cast(字段名 as 转换的类型 )，其中类型可以为：
+
+CHAR[(N)] 字符型 
+DATE 日期型
+DATETIME 日期和时间型
+DECIMAL float型
+SIGNED int
+TIME 时间型
+
+where length(sosd.obj_id)=32根据字段长度进行查询
+mybatis
+<if test="paymentPrice != null and paymentPrice != '' or paymentPrice==0">
+	payment_price = #{paymentPrice},
+</if>	
+	
+线上(java) mysql 
+ip:rm-2zeg095xjdb43q43z.mysql.rds.aliyuncs.com  端口:3306
+数据库:chewj
+用户名:chewj
+密码:cw96TR3u
+
+阿里云登录：https://account.aliyun.com/    chexian_300_cn/cwe960UdDYEecTe315o9
+
+test数据库  ossadmin 密码：wenty963
+
+
+ 
+
+/chewjapi/a
+
+if(parseFloat($("#shouldPayTotal").html())<parseFloat($("#memberDiscountPrice").val())){
+	alertx("订单减免输入金额不可大于应收金额！");
+	$("#memberDiscountPrice").val("")
+	return false;
+}
+
+===========================hello.jsp==============================================
+ <script type="text/javascript">
+		function go(){
+			opener.sun();
+		}
+	</script>
+  <button type="button" class="btna btn-primary btn_sizeb" onclick="go()" id="delayConfirm">确认</button>
+===========================hello.jsp============================================== 
+
+ 
+@RestController  
+	  注解相当于@ResponseBody ＋ @Controller合在一起的作用，无法返回jsp页面	
+@GetMapping
+		是一个组合注解 是@RequestMapping(method = RequestMethod.GET)的缩写
+@PostMapping
+		是一个组合注解 是@RequestMapping(method = RequestMethod.POST)的缩写	
+@PathVariable 
+		映射 URL 绑定的占位符，该功能在SpringMVC 向 REST 目标挺进发展过程中具有里程碑的意义 
+
+Optional是jdk1.8引入的类型，Optional是一个容器对象，它包括了我们需要的对象，使用isPresent方法判断所包
+含对象是否为空，isPresent方法返回false则表示Optional包含对象为空，否则可以使用get()取出对象进行操作。
+Optional的优点是：
+1、提醒你非空判断。
+2、将对象非空检测标准化。
+           例：     Optional<CmsPage> optional = cmsPageRepository.findOne("5b17a34211fe5e2ee8c116c9");
+										if(optional.isPresent()){
+										     CmsPage cmsPage = optional.get();    
+										     cmsPage.setPageName("测试页面01");    
+										     cmsPageRepository.save(cmsPage);    
+										} 
+										
+
+start mongod --dbpath "D:/Program/MongoDB/Server/3.4/data" --logpath "D:/Program/MongoDB/Server/3.4/log/mongod.log" --logappend --install --serviceName "MongoDB"
+
+
+#数据库路径 
+dbpath=D:\Program\MongoDB\Server\3.4\data 
+#日志输出文件路径 
+logpath=D:\Program\MongoDB\Server\3.4\logs\mongo.log 
+#错误日志采用追加模式 
+logappend=true 
+#启用日志文件，默认启用 
+journal=true 
+#这个选项可以过滤掉一些无用的日志信息，若需要调试使用请设置为false 
+quiet=true 
+#端口号 默认为27017 
+port=27017 
+
+#数据库路径?
+dbpath=D:\Program\MongoDB\Server\3.4\data?
+#日志输出文件路径?
+logpath=D:\Program\MongoDB\Server\3.4\logs\mongo.log?
+#错误日志采用追加模式?
+logappend=true?
+#启用日志文件，默认启用?
+journal=true?
+#这个选项可以过滤掉一些无用的日志信息，若需要调试使用请设置为false?
+quiet=true?
+#端口号?默认为27017?
+port=27017?
+
+111111  java 程序运行
+	a  idea 导入工程 
+	b  导入成功后 分别启动 registry  gateway  auth  system 四个微服务
+222222  vue 程序运行
+	a  进入vue 程序根目录 cmd 运行npm install 安装依赖
+	b  安装依赖完成后  运行npm run dev 启动程序
+
+			
+function changeDuration(x){
+  var date=$(x).prev().text();
+  var monthNum=x.value;
+}
+			
+ 
